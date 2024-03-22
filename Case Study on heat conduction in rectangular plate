@@ -1,0 +1,54 @@
+% Define parameters
+Lx = 0.2; % Length of the rectangular plate in the x-direction (m)
+Ly = 0.1; % Length of the rectangular plate in the y-direction (m)
+k = 200; % Thermal conductivity (W/(m*K))
+Q = 5000; % Heat source strength (W/m^2)
+T0 = 20; % Initial temperature of the plate (°C)
+T_source = 100; % Temperature of the heat source (°C)
+
+% Define grid parameters
+Nx = 50; % Number of grid points in the x-direction
+Ny = 25; % Number of grid points in the y-direction
+dx = Lx / Nx; % Grid spacing in the x-direction (m)
+dy = Ly / Ny; % Grid spacing in the y-direction (m)
+
+% Initialize temperature matrix
+T = ones(Ny, Nx) * T0;
+
+% Set initial conditions (heat source at the center)
+T(floor(Ny/2), floor(Nx/2)) = T_source;
+
+% Define time parameters
+dt = 0.01; % Time step (s)
+t_final = 10; % Final time (s)
+Ntimesteps = t_final / dt; % Number of time steps
+
+% Store temperature distribution at each time step
+temperature_vs_time = zeros(Ny, Nx, Ntimesteps);
+
+% Perform time-stepping using finite difference method
+for n = 1:Ntimesteps
+    T_new = T;
+    for i = 2:Ny-1
+        for j = 2:Nx-1
+            % Finite difference equation
+            T_new(i, j) = T(i, j) + (k*dt/dx^2)*(T(i+1,j) - 2*T(i,j) + T(i-1,j)) + ...
+                (k*dt/dy^2)*(T(i,j+1) - 2*T(i,j) + T(i,j-1)) + Q*dt/k;
+        end
+    end
+    T = T_new;
+    
+    % Store temperature distribution at current time step
+    temperature_vs_time(:, :, n) = T;
+end
+
+% Plot temperature distribution vs. time using contour graph
+figure;
+for i = 1:Ntimesteps
+    contourf(linspace(0, Lx, Nx), linspace(0, Ly, Ny), temperature_vs_time(:, :, i), 50, 'LineStyle', 'none');
+    colorbar;
+    xlabel('x (m)');
+    ylabel('y (m)');
+    title(['Temperature Distribution at t = ', num2str(i*dt), ' seconds']);
+    pause(0.1); % Pause to display each time step
+end
